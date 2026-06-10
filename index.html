@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小红书全能工坊 v5.1 像素完美版</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700;900&family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+XiaoWei&family=Ma+Shan+Zheng&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+    
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+    <style>
+        body { background: #08121d; color: #f1f5f9; font-family: 'Noto Sans SC', sans-serif; }
+        
+        /* 强制左侧输入框背景为极深色，文字为纯白色，防隐形 */
+        .force-visible-input {
+            background-color: #020617 !important;
+            color: #ffffff !important;
+            border: 1px solid #334155 !important;
+        }
+        .force-visible-input:focus {
+            border-color: #006dd4 !important;
+            box-shadow: 0 0 0 2px rgba(0, 109, 212, 0.4) !important;
+        }
+
+        .preview-card { width: 360px; height: 480px; position: relative; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); background-color: #ffffff; }
+        .color-input-node::-webkit-color-swatch-wrapper { padding: 0; }
+        .color-input-node::-webkit-color-swatch { border: 2px solid #ffffff; border-radius: 50%; }
+        .grid-bg-mesh { background-size: 20px 20px; background-image: linear-gradient(to right, rgba(0,109,212,0.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,109,212,0.08) 1px, transparent 1px); }
+        
+        /* 自由移动贴图层 */
+        #user-upload-img { position: absolute; cursor: move; user-select: none; z-index: 1; max-width: none !important; touch-action: none; }
+        
+        .style-btn { transition: all 0.2s; border: 1px solid #1e293b; color: #94a3b8; background-color: #0f172a; }
+        .style-btn:hover { border-color: #006dd4; color: #ffffff; }
+        .style-btn.active { background-color: #006dd4 !important; color: white !important; border-color: #006dd4 !important; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-5xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-blue-600 to-indigo-500">
+                卡片工坊 <span class="text-sm px-2 py-1 bg-blue-600 text-white rounded-md align-middle">v5.1 Stable</span>
+            </h1>
+            <p class="text-gray-400 mt-3 text-sm italic">"像素级离屏完美渲染引擎：彻底终结正文错位与下载失效Bug"</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <div class="lg:col-span-7 space-y-6">
+                
+                <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 shadow-2xl">
+                    <h2 class="text-base font-bold mb-4 text-blue-400 flex items-center"><i class="fa-solid fa-file-pen mr-2"></i> 1. 编辑文案内容</h2>
+                    <div class="space-y-4 text-xs">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-gray-400 mb-1 block">封面大标题</label>
+                                <input id="input-title" type="text" value="国家电网备考经验" class="w-full force-visible-input rounded-xl px-4 py-2">
+                            </div>
+                            <div>
+                                <label class="text-gray-400 mb-1 block">封面强调词 / 悬念词</label>
+                                <input id="input-title-accent" type="text" value="国家电网" class="w-full force-visible-input rounded-xl px-4 py-2">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-gray-400 mb-1 block">副标题说明</label>
+                            <input id="input-subtitle" type="text" value="不做标题党，只分享真正能落地的纯干货" class="w-full force-visible-input rounded-xl px-4 py-2">
+                        </div>
+                        <div>
+                            <label class="text-gray-400 mb-1 block">正文笔记内容（双回车切分下一张卡片）</label>
+                            <textarea id="input-body" rows="4" class="w-full force-visible-input rounded-xl p-4 font-mono">✍️ 核心排版原则
+✅ 视觉中心法：标题必须占据首屏1/3
+✅ 色彩心理学：蓝色代表专业与沉稳
+
+🚀 增长底层逻辑
+🚩 制造认同感：从普通人视角切入
+🚩 结果先行：先放成功案例图</textarea>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-gray-400 mb-1 block text-[10px]">作者署名</label>
+                                <input id="input-author" type="text" value="@视觉实验室" class="w-full force-visible-input rounded-xl px-3 py-1.5">
+                            </div>
+                            <div>
+                                <label class="text-gray-400 mb-1 block text-[10px]">右上角标签</label>
+                                <input id="input-tag" type="text" value="设计分享" class="w-full force-visible-input rounded-xl px-3 py-1.5">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 shadow-2xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-base font-bold text-green-400 flex items-center"><i class="fa-solid fa-image mr-2"></i> 2. 上传贴图与拖拽尺寸微调</h2>
+                        <input type="file" id="upload-img-file" accept="image/*" class="hidden">
+                        <label for="upload-img-file" class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs cursor-pointer hover:bg-blue-700">上传图片</label>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 items-center">
+                        <div class="bg-gray-950 p-2 rounded-xl border border-gray-800 flex items-center space-x-2">
+                            <span class="text-[10px] text-gray-500">图片尺寸:</span>
+                            <input type="range" id="img-scale-slider" min="20" max="600" value="180" class="w-full accent-blue-500">
+                        </div>
+                        <button onclick="clearUploadedImage()" class="text-[10px] text-red-500 hover:text-red-400 text-left pl-2">清除图片</button>
+                    </div>
+                </div>
+
+                <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 shadow-2xl">
+                    <h2 class="text-base font-bold mb-4 text-blue-400 flex items-center"><i class="fa-solid fa-layer-group mr-2"></i> 3. 爆款封面板式一键切换 (共14款)</h2>
+                    <div class="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                        <button onclick="setTheme('minimal')" id="btn-t-minimal" class="style-btn p-1.5 rounded text-[10px] active">极简</button>
+                        <button onclick="setTheme('magazine')" id="btn-t-magazine" class="style-btn p-1.5 rounded text-[10px]">杂志</button>
+                        <button onclick="setTheme('kaoyan')" id="btn-t-kaoyan" class="style-btn p-1.5 rounded text-[10px]">考研</button>
+                        <button onclick="setTheme('number')" id="btn-t-number" class="style-btn p-1.5 rounded text-[10px]">数字</button>
+                        <button onclick="setTheme('mirror')" id="btn-t-mirror" class="style-btn p-1.5 rounded text-[10px]">极光</button>
+                        <button onclick="setTheme('polaroid')" id="btn-t-polaroid" class="style-btn p-1.5 rounded text-[10px]">相框</button>
+                        <button onclick="setTheme('neon')" id="btn-t-neon" class="style-btn p-1.5 rounded text-[10px]">霓虹</button>
+                        <button onclick="setTheme('split')" id="btn-t-split" class="style-btn p-1.5 rounded text-[10px]">分栏</button>
+                        <button onclick="setTheme('geometric')" id="btn-t-geometric" class="style-btn p-1.5 rounded text-[10px]">几何</button>
+                        <button onclick="setTheme('double-border')" id="btn-t-double-border" class="style-btn p-1.5 rounded text-[10px]">双框</button>
+                        <button onclick="setTheme('gradient-flash')" id="btn-t-gradient-flash" class="style-btn p-1.5 rounded text-[10px]">流光</button>
+                        <button onclick="setTheme('quote')" id="btn-t-quote" class="style-btn p-1.5 rounded text-[10px]">引用</button>
+                        <button onclick="setTheme('modern-bold')" id="btn-t-modern-bold" class="style-btn p-1.5 rounded text-[10px]">硬核</button>
+                        <button onclick="setTheme('notebook')" id="btn-t-notebook" class="style-btn p-1.5 rounded text-[10px]">方格</button>
+                    </div>
+                </div>
+
+                <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 shadow-2xl">
+                    <h2 class="text-base font-bold mb-4 text-yellow-500 flex items-center"><i class="fa-solid fa-palette mr-2"></i> 4. 全局颜色、字体与多级字号微调</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div class="bg-gray-950 p-2 rounded-xl flex items-center space-x-2 border border-gray-800">
+                                <input type="color" id="color-bg" value="#ffffff" class="color-input-node w-5 h-5 cursor-pointer">
+                                <span class="text-gray-400">画布背景</span>
+                            </div>
+                            <div class="bg-gray-950 p-2 rounded-xl flex items-center space-x-2 border border-gray-800">
+                                <input type="color" id="color-title" value="#006dd4" class="color-input-node w-5 h-5 cursor-pointer">
+                                <span class="text-gray-400">主蓝色调</span>
+                            </div>
+                            <div class="bg-gray-950 p-2 rounded-xl flex items-center space-x-2 border border-gray-800">
+                                <input type="color" id="color-body" value="#334155" class="color-input-node w-5 h-5 cursor-pointer">
+                                <span class="text-gray-400">正文字色</span>
+                            </div>
+                            <div class="bg-gray-950 p-2 rounded-xl flex items-center space-x-2 border border-gray-800">
+                                <input type="color" id="color-accent" value="#fa8c16" class="color-input-node w-5 h-5 cursor-pointer">
+                                <span class="text-gray-400">核心强调</span>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <select id="select-font-title" class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2 text-xs text-white">
+                                <option value="'Noto Sans SC', sans-serif" selected>现代厚重 · 思源黑体</option>
+                                <option value="'Noto Serif SC', serif">高级衬线 · 思源宋体</option>
+                                <option value="'ZCOOL XiaoWei', serif">文艺骨感 · 小薇体</option>
+                                <option value="'Ma Shan Zheng', cursive">霸气手写 · 马善政体</option>
+                            </select>
+                            <button onclick="makeColorDark()" class="w-full bg-gray-800 hover:bg-gray-700 text-white rounded-lg py-1 text-xs">一键秒变高级暗黑模式</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-[10px]">
+                        <div class="bg-gray-950 p-3 rounded-xl border border-gray-800">
+                            <div class="flex justify-between text-gray-400 mb-2"><span>封面大标题字号</span><span id="lbl-sz-title">32px</span></div>
+                            <input type="range" id="size-title" min="16" max="60" value="32" class="w-full accent-blue-500">
+                        </div>
+                        <div class="bg-gray-950 p-3 rounded-xl border border-gray-800">
+                            <div class="flex justify-between text-gray-400 mb-2"><span>封面强调词字号</span><span id="lbl-sz-accent">24px</span></div>
+                            <input type="range" id="size-accent" min="16" max="60" value="24" class="w-full accent-blue-500">
+                        </div>
+                        <div class="bg-gray-950 p-3 rounded-xl border border-gray-800">
+                            <div class="flex justify-between text-gray-400 mb-2"><span>封面段落上下间距</span><span id="lbl-spacing">14px</span></div>
+                            <input type="range" id="spacing-gap" min="-10" max="60" value="14" class="w-full accent-blue-500">
+                        </div>
+                        <div class="bg-gray-950 p-3 rounded-xl border border-gray-800">
+                            <div class="flex justify-between text-gray-400 mb-2"><span>封面副标题字号</span><span id="lbl-sz-sub">12px</span></div>
+                            <input type="range" id="size-subtitle" min="8" max="24" value="12" class="w-full accent-blue-500">
+                        </div>
+                        <div class="bg-gray-950 p-3 rounded-xl border border-gray-800">
+                            <div class="flex justify-between text-gray-400 mb-2"><span>正文笔记内容字号</span><span id="lbl-sz-body">14px</span></div>
+                            <input type="range" id="size-body" min="10" max="24" value="14" class="w-full accent-blue-500">
+                        </div>
+                        <div class="bg-gray-950 p-3 rounded-xl border border-gray-800">
+                            <div class="flex justify-between text-gray-400 mb-2"><span>正文笔记行间距</span><span id="lbl-lineheight">1.6</span></div>
+                            <input type="range" id="line-height-body" min="1.0" max="2.5" step="0.1" value="1.6" class="w-full accent-blue-500">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-5">
+                <div class="sticky top-6 flex flex-col items-center space-y-4">
+                    <div class="flex bg-gray-900 p-1 rounded-full border border-gray-800 shadow-xl">
+                        <button onclick="switchTab('cover')" id="tab-btn-cover" class="px-6 py-1.5 rounded-full text-xs font-bold bg-blue-600 text-white transition">封面预览</button>
+                        <button onclick="switchTab('body')" id="tab-btn-body" class="px-6 py-1.5 rounded-full text-xs font-bold text-gray-400 transition">正文卡片群 (<span id="span-count">0</span>)</button>
+                    </div>
+
+                    <div id="view-cover">
+                        <div id="render-target-cover" class="preview-card flex flex-col justify-between p-8 select-none">
+                            <img id="user-upload-img" src="" class="hidden">
+                            <div id="cover-deco-layer" class="absolute inset-0 pointer-events-none z-0"></div>
+                            
+                            <div class="z-10 flex justify-between items-center text-xs font-black" id="top-bar">
+                                <span id="node-tag" class="px-2 py-0.5 rounded text-white bg-blue-600">设计分享</span>
+                                <span id="node-tag-right" class="opacity-30 uppercase font-mono" style="font-family:'Noto Sans SC', sans-serif !important;">SIGEDUCITION</span>
+                            </div>
+
+                            <div class="z-10 my-auto w-full" id="title-group">
+                                <div id="wrapper-main-title" class="inline-block"><h2 id="node-main-title" class="font-black leading-tight tracking-tight">大标题</h2></div>
+                                <div id="wrapper-accent-title" class="block"><h2 id="node-accent-title" class="font-black leading-tight">强调内容</h2></div>
+                                <div id="node-divider" class="w-10 h-1 rounded-full"></div>
+                                <p id="node-sub-title" class="font-medium leading-relaxed">副标题说明</p>
+                            </div>
+
+                            <div id="node-footer" class="z-10 border-t pt-4 flex justify-between items-center border-gray-100">
+                                <span id="node-author" class="text-xs font-bold">@创作者</span>
+                                <span class="text-[10px] font-mono opacity-20 uppercase" id="node-footer-right" style="font-family:'Noto Sans SC', sans-serif !important;">SIGEDUCITION</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="view-body" class="hidden space-y-6 overflow-y-auto max-h-[500px] p-2">
+                        <div id="body-cards-stack" class="space-y-6"></div>
+                    </div>
+
+                    <div class="w-full max-w-[360px] grid grid-cols-2 gap-4 pt-2">
+                        <button onclick="snapAndDownloadCover()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-xs transition"><i class="fa-solid fa-image mr-1"></i> 导出超清封面</button>
+                        <button onclick="zipAndDownloadAll()" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-xl text-xs transition"><i class="fa-solid fa-box-archive mr-1"></i> 打包全套下载</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTheme = 'minimal';
+        let currentTab = 'cover';
+        let isDragging = false;
+        let startX, startY, imgLeft, imgTop;
+
+        const userImg = document.getElementById('user-upload-img');
+        const imgInput = document.getElementById('upload-img-file');
+        const scaleSlider = document.getElementById('img-scale-slider');
+
+        imgInput.addEventListener('change', e => {
+            const file = e.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    userImg.src = ev.target.result;
+                    userImg.classList.remove('hidden');
+                    userImg.style.left = '90px'; userImg.style.top = '150px'; userImg.style.width = '180px';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+        function clearUploadedImage() { userImg.src = ''; userImg.classList.add('hidden'); imgInput.value = ''; }
+        scaleSlider.addEventListener('input', function() { userImg.style.width = this.value + "px"; });
+
+        function startDrag(e) {
+            isDragging = true;
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            startX = clientX; startY = clientY;
+            imgLeft = parseInt(userImg.style.left) || 0; imgTop = parseInt(userImg.style.top) || 0;
+            if(e.cancelable) e.preventDefault();
+        }
+
+        function moveDrag(e) {
+            if(!isDragging) return;
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            userImg.style.left = (imgLeft + clientX - startX) + "px";
+            userImg.style.top = (imgTop + clientY - startY) + "px";
+        }
+
+        function stopDrag() { isDragging = false; }
+
+        userImg.addEventListener('mousedown', startDrag);
+        document.addEventListener('mousemove', moveDrag);
+        document.addEventListener('mouseup', stopDrag);
+        userImg.addEventListener('touchstart', startDrag);
+        document.addEventListener('touchmove', moveDrag, { passive: false });
+        document.addEventListener('touchend', stopDrag);
+
+        function makeColorDark() {
+            document.getElementById('color-bg').value = '#0a111a';
+            document.getElementById('color-title').value = '#ffffff';
+            document.getElementById('color-body').value = '#94a3b8';
+            document.getElementById('color-accent').value = '#38bdf8';
+            drawGraph();
+        }
+
+        function setTheme(t) {
+            currentTheme = t;
+            document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`btn-t-${t}`).classList.add('active');
+            drawGraph();
+        }
+
+        function switchTab(t) {
+            currentTab = t;
+            if(t === 'cover') {
+                document.getElementById('view-cover').classList.remove('hidden');
+                document.getElementById('view-body').classList.add('hidden');
+                document.getElementById('tab-btn-cover').className = "px-6 py-1.5 rounded-full text-xs font-bold bg-blue-600 text-white transition";
+                document.getElementById('tab-btn-body').className = "px-6 py-1.5 rounded-full text-xs font-bold text-gray-400 transition";
+            } else {
+                document.getElementById('view-cover').classList.add('hidden');
+                document.getElementById('view-body').classList.remove('hidden');
+                document.getElementById('tab-btn-body').className = "px-6 py-1.5 rounded-full text-xs font-bold bg-blue-600 text-white transition";
+                document.getElementById('tab-btn-cover').className = "px-6 py-1.5 rounded-full text-xs font-bold text-gray-400 transition";
+            }
+            drawGraph();
+        }
+
+        function drawGraph() {
+            const titleVal = document.getElementById('input-title').value;
+            const accentVal = document.getElementById('input-title-accent').value;
+            const subVal = document.getElementById('input-subtitle').value;
+            const bodyVal = document.getElementById('input-body').value;
+            const authorVal = document.getElementById('input-author').value;
+            const tagVal = document.getElementById('input-tag').value;
+            const fontTitleVal = document.getElementById('select-font-title').value;
+
+            const bgClr = document.getElementById('color-bg').value;
+            const titleClr = document.getElementById('color-title').value;
+            const bodyClr = document.getElementById('color-body').value;
+            const accentClr = document.getElementById('color-accent').value;
+
+            const szTitle = document.getElementById('size-title').value;
+            const szAccent = document.getElementById('size-accent').value;
+            const szSub = document.getElementById('size-subtitle').value;
+            const szBody = document.getElementById('size-body').value;
+            const gapVal = document.getElementById('spacing-gap').value;
+            const lhBody = document.getElementById('line-height-body').value;
+
+            document.getElementById('lbl-sz-title').textContent = szTitle + "px";
+            document.getElementById('lbl-sz-accent').textContent = szAccent + "px";
+            document.getElementById('lbl-sz-sub').textContent = szSub + "px";
+            document.getElementById('lbl-sz-body').textContent = szBody + "px";
+            document.getElementById('lbl-spacing').textContent = gapVal + "px";
+            document.getElementById('lbl-lineheight').textContent = lhBody;
+
+            const cover = document.getElementById('render-target-cover');
+            const deco = document.getElementById('cover-deco-layer');
+            const wTitle = document.getElementById('wrapper-main-title');
+            const wAccent = document.getElementById('wrapper-accent-title');
+            const mTitle = document.getElementById('node-main-title');
+            const aTitle = document.getElementById('node-accent-title');
+            const divider = document.getElementById('node-divider');
+            const subTitle = document.getElementById('node-sub-title');
+            const tagRightDom = document.getElementById('node-tag-right');
+            const footerRightDom = document.getElementById('node-footer-right');
+
+            cover.style.backgroundColor = bgClr; 
+            cover.style.fontFamily = fontTitleVal;
+            cover.className = "preview-card flex flex-col justify-between p-8";
+            deco.innerHTML = ''; 
+            divider.classList.remove('hidden');
+            document.getElementById('title-group').className = "z-10 my-auto w-full";
+
+            wTitle.className = "inline-block"; wTitle.style.cssText = '';
+            wAccent.className = "block"; wAccent.style.cssText = '';
+
+            mTitle.textContent = titleVal;
+            mTitle.className = "font-black leading-tight tracking-tight";
+            mTitle.style.cssText = `color:${titleClr}; font-size:${szTitle}px;`;
+
+            aTitle.textContent = accentVal;
+            aTitle.className = "font-black leading-tight";
+            aTitle.style.cssText = `color:${titleClr}; font-size:${szAccent}px; margin-top:${gapVal}px;`;
+
+            divider.style.backgroundColor = titleClr;
+            divider.style.marginTop = Math.max(parseInt(gapVal), 8) + "px";
+
+            subTitle.textContent = subVal;
+            subTitle.style.cssText = `color:${bodyClr}; font-size:${szSub}px; margin-top:${gapVal}px; line-height: 1.5;`;
+
+            document.getElementById('node-author').textContent = authorVal;
+            document.getElementById('node-author').style.color = titleClr;
+            document.getElementById('node-tag').textContent = tagVal;
+            document.getElementById('node-tag').style.backgroundColor = accentClr;
+            document.getElementById('node-footer').style.borderColor = bodyClr + "20";
+
+            tagRightDom.textContent = "SIGEDUCITION"; 
+            tagRightDom.style.cssText = `color:${bodyClr}; font-family:'Noto Sans SC', sans-serif !important;`;
+            footerRightDom.textContent = "SIGEDUCITION"; 
+            footerRightDom.style.cssText = `color:${bodyClr}; font-family:'Noto Sans SC', sans-serif !important;`;
+
+            if(currentTheme === 'magazine') {
+                deco.innerHTML = `<div class="absolute bottom-12 right-[-55px] text-7xl font-black opacity-5 uppercase tracking-tighter select-none" style="color:${titleClr}; transform:rotate(90deg); font-family:'Noto Sans SC', sans-serif !important; z-index: 0;">SIGEDUCITION</div>`;
+            } else if(currentTheme === 'kaoyan') {
+                wTitle.className = "inline-block px-3 py-1 rounded-md mb-2 shadow-sm";
+                wTitle.style.backgroundColor = titleClr; mTitle.style.color = bgClr;
+                wAccent.className = "inline-block px-3 py-1 rounded-md shadow-sm";
+                wAccent.style.backgroundColor = accentClr; aTitle.style.color = "#ffffff"; aTitle.style.marginTop = "0px";
+                divider.classList.add('hidden');
+            } else if(currentTheme === 'number') {
+                const matchNum = accentVal.match(/\d+/);
+                const numStr = matchNum ? matchNum[0] : "01";
+                deco.innerHTML = `<div class="absolute right-4 top-4 text-[180px] font-black opacity-10 leading-none select-none" style="color:${titleClr}; font-family:'Noto Sans SC', sans-serif !important;">${numStr}</div>`;
+            } else if(currentTheme === 'mirror') {
+                deco.innerHTML = `<div class="absolute inset-0 opacity-15" style="background:linear-gradient(135deg, ${titleClr}, transparent)"></div><div class="absolute bottom-0 h-1.5 w-full" style="background:${titleClr}"></div>`;
+            } else if(currentTheme === 'polaroid') {
+                cover.className = "preview-card p-6 pb-12 flex flex-col justify-between border-[12px] border-white shadow-sm";
+            } else if(currentTheme === 'neon') {
+                cover.className = "preview-card p-8 flex flex-col justify-between border-4 rounded-3xl";
+                cover.style.borderColor = titleClr; cover.style.boxShadow = `0 0 20px ${titleClr}40`;
+            } else if(currentTheme === 'notebook') {
+                cover.classList.add('grid-bg-mesh');
+            } else if(currentTheme === 'split') {
+                deco.innerHTML = `<div class="absolute left-0 w-3 h-full" style="background:${titleClr}"></div>`;
+            } else if(currentTheme === 'geometric') {
+                deco.innerHTML = `<div class="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-10 select-none pointer-events-none" style="background:${titleClr}"></div>`;
+            } else if(currentTheme === 'double-border') {
+                deco.innerHTML = `<div class="absolute inset-2 border border-dashed opacity-25" style="border-color:${titleClr}"></div><div class="absolute inset-4 border-2" style="border-color:${titleClr}40"></div>`;
+            } else if(currentTheme === 'gradient-flash') {
+                cover.style.background = `linear-gradient(135deg, ${bgClr} 55%, ${titleClr}25)`;
+            } else if(currentTheme === 'quote') {
+                document.getElementById('title-group').className = "z-10 my-auto w-full text-center";
+                deco.innerHTML = `<div class="absolute top-20 left-10 text-6xl opacity-20 font-serif select-none" style="color:${titleClr}">“</div><div class="absolute bottom-40 right-10 text-6xl opacity-20 font-serif select-none" style="color:${titleClr}">”</div>`;
+                divider.classList.add('mx-auto');
+            } else if(currentTheme === 'modern-bold') {
+                deco.innerHTML = `<div class="absolute top-4 right-4 font-black text-[9px] opacity-40 uppercase tracking-widest" style="color:${bodyClr}; font-family:'Noto Sans SC', sans-serif !important;">SIGEDUCITION · 2026</div>`;
+            } else if(currentTheme === 'bottom-mask') {
+                deco.innerHTML = `<div class="absolute bottom-0 w-full h-1/3 opacity-15 select-none" style="background:linear-gradient(to top, ${titleClr}, transparent)"></div>`;
+            }
+
+            // 正文卡片群构建
+            const bodyBlocks = bodyVal.split(/\n\s*\n/).filter(b => b.trim());
+            document.getElementById('span-count').textContent = bodyBlocks.length;
+            const stack = document.getElementById('body-cards-stack');
+            stack.innerHTML = '';
+
+            bodyBlocks.forEach((block, idx) => {
+                const lines = block.split('\n');
+                const bTitle = lines[0] || '';
+                const bContent = lines.slice(1).map(l => `<p class="mb-2.5 font-medium tracking-wide" style="color:${bodyClr}; font-size:${szBody}px; line-height:${lhBody}; font-family:${fontTitleVal} !important;">${l}</p>`).join('');
+                stack.insertAdjacentHTML('beforeend', `
+                    <div id="render-target-body-${idx}" class="preview-card p-8 flex flex-col justify-between" style="background:${bgClr}; font-family:${fontTitleVal} !important;">
+                        ${currentTheme === 'notebook' ? '<div class="absolute inset-0 grid-bg-mesh pointer-events-none"></div>' : ''}
+                        <div class="z-10">
+                            <div class="flex items-center space-x-2 mb-4">
+                                <div class="w-1.5 h-5" style="background:${titleClr}"></div>
+                                <h3 class="font-black text-lg" style="color:${titleClr}; font-family:${fontTitleVal}">${bTitle}</h3>
+                            </div>
+                            <div>${bContent}</div>
+                        </div>
+                        <div class="z-10 border-t pt-4 flex justify-between items-center text-[10px]" style="border-color:${bodyClr}20; color:${bodyClr}">
+                            <span class="font-bold">PAGE 0${idx+1}</span>
+                            <span class="font-bold tracking-wider uppercase" style="font-family:'Noto Sans SC', sans-serif !important;">${authorVal}</span>
+                        </div>
+                    </div>
+                `);
+            });
+        }
+
+        const allControlIds = [
+            'input-title','input-title-accent','input-subtitle','input-body','input-author','input-tag',
+            'select-font-title','color-bg','color-title','color-body','color-accent',
+            'size-title','size-accent','size-subtitle','size-body','spacing-gap','line-height-body'
+        ];
+        allControlIds.forEach(id => {
+            const el = document.getElementById(id);
+            if(el) {
+                el.addEventListener('input', drawGraph);
+                el.addEventListener('change', drawGraph);
+            }
+        });
+
+        // 💡 终极离屏克隆渲染算法函数 (专治html2canvas下载失败与正文位置错位)
+        function captureDomElement(elementId, fileName) {
+            return new Promise((resolve, reject) => {
+                const originTarget = document.getElementById(elementId);
+                if (!originTarget) return reject("节点不存在");
+
+                // 1. 克隆一个完全一样的独立 DOM 沙盒节点
+                const cloneSandbox = originTarget.cloneNode(true);
+                
+                // 2. 抹除沙盒潜藏的 CSS 滚动条和隐藏位移属性，强制初始化定位
+                cloneSandbox.style.position = 'fixed';
+                cloneSandbox.style.top = '-9999px';
+                cloneSandbox.style.left = '-9999px';
+                cloneSandbox.style.visibility = 'visible';
+                cloneSandbox.style.display = 'flex';
+                
+                // 3. 将克隆出来的沙盒临时强行悬挂到真实的宿主 body 树上
+                document.body.appendChild(cloneSandbox);
+
+                // 4. 让 html2canvas 在这个不受页面滚动干扰的绝缘纯净沙盒上截图
+                html2canvas(cloneSandbox, {
+                    scale: 4, // 四倍超清分辨率
+                    useCORS: true,
+                    allowTaint: false,
+                    backgroundColor: null,
+                    logging: false
+                }).then(canvas => {
+                    // 5. 截图完成，彻底卸载和销毁临时沙盒节点，防内存泄漏
+                    document.body.removeChild(cloneSandbox);
+                    resolve({ canvas: canvas, name: fileName });
+                }).catch(err => {
+                    if (cloneSandbox.parentNode) document.body.removeChild(cloneSandbox);
+                    reject(err);
+                });
+            });
+        }
+
+        // 单张超清封面独立导出
+        function snapAndDownloadCover() {
+            captureDomElement('render-target-cover', `SIG_Cover_${Date.now()}.png`).then(result => {
+                const link = document.createElement('a');
+                link.download = result.name;
+                link.href = result.canvas.toDataURL('image/png');
+                link.click();
+            }).catch(err => console.error("封面下载失败", err));
+        }
+
+        // 批量离屏无错位打包归档
+        async function zipAndDownloadAll() {
+            const zip = new JSZip(); const folder = zip.folder("SIG_Export_Images");
+
+            try {
+                // 一、打包封面
+                const cvResult = await captureDomElement('render-target-cover', "00_封面大图.png");
+                const cvBlob = await new Promise(res => cvResult.canvas.toBlob(res, 'image/png'));
+                folder.file(cvResult.name, cvBlob);
+
+                // 二、打包正文（利用离屏克隆沙盒，阻断多卡片拼缝错位问题）
+                const bodyBlocks = document.getElementById('input-body').value.split(/\n\s*\n/).filter(b => b.trim());
+                for(let i = 0; i < bodyBlocks.length; i++){
+                    const targetId = `render-target-body-${i}`;
+                    if(document.getElementById(targetId)) {
+                        const bodyResult = await captureDomElement(targetId, `0${i+1}_正文卡片_${i+1}.png`);
+                        const bodyBlob = await new Promise(res => bodyResult.canvas.toBlob(res, 'image/png'));
+                        folder.file(bodyResult.name, bodyBlob);
+                    }
+                }
+
+                // 三、压包下载
+                zip.generateAsync({type:"blob"}).then(blob => {
+                    saveAs(blob, `SIG_Perfect_Pack_${Date.now()}.zip`);
+                });
+            } catch (error) {
+                alert("导出遇到阻碍，请检查内容是否包含异常图片资源: " + error);
+            }
+        }
+
+        window.onload = function() {
+            drawGraph();
+        };
+    </script>
+</body>
+</html>
